@@ -18,7 +18,7 @@ app.use('/vehicles', vehiclesRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
-  res.send('404! Requested URL not found');
+  res.send(createError[404]('Requested URL does not exist'));
 });
 
 // error handler
