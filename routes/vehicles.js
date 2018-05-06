@@ -16,16 +16,14 @@ function getURL(type) {
 }
 
 function getSafetyRatings(payload) {
-  console.log(payload)
   return rp
     .get(getURL('safetyRatings', payload))
     .then(a => {
-      console.log(JSON.parse(a));
       return a;
     })
     .then(JSON.parse)
     .then(response => ({
-      Count: response.Count,
+      Count: response.Count || 0,
       Results: response.Results.map(vehicle => ({
         Description: vehicle.VehicleDescription,
         VehicleId: vehicle.VehicleId,
@@ -42,7 +40,6 @@ function getOverallRating(vehicleId) {
     .get(getURL('overallRating', vehicleId))
     .then(JSON.parse)
     .then(res => res.Results[0].OverallRating)
-
 }
 
 /* GET users listing. */
@@ -50,11 +47,14 @@ router.get('/:modelYear/:manufacturer/:model', function (req, res, next) {
   getSafetyRatings(req.params)
     .then(response => {
       if (req.query.withRating && ['true', true, 1, '1'].indexOf(req.query.withRating) >= 0)
-        return Promise.all(response.Results.map(vehicle => getOverallRating(vehicle.VehicleId)
+        return response.Results.length ? Promise.all(response.Results.map(vehicle => getOverallRating(vehicle.VehicleId)
           .then(CrashRating => Object.assign({}, vehicle, {
             CrashRating
           }))
-        ))
+        )) : {
+          Count: 0,
+          Results: []
+        }
       else return response;
     })
     .then(response => res.send(response))
